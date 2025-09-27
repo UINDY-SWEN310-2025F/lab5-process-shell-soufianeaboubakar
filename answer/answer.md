@@ -1,1 +1,1 @@
-put your answers here
+Both versions, psh1 and psh2 are honestly okay, but the best is psh1 for me because psh1 dynamic is better of how it has an array of ptrs and mallocs(). The use of execvp works better with *arglist[] empty array because it can easily and efficiently detect if the process did not terminate correctly. According to research psh1 has less memory overhead which is good because everytime fork() is called the operating system must copy the parent's address space. The bright side of psh1 is that we only send one worker to do the job fork goes to execute. 
