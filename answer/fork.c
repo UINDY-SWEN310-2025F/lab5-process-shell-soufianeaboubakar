@@ -1,57 +1,29 @@
 #include <stdio.h>
-#include <signal.h>
-#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-
-#define MAXARGS 20   /* cmdline args */
-#define ARGLEN  100  /* token length */
-
-int execute(char *arglist[]);
+#include <sys/types.h>
+#include <sys/wait.h>
 
 int main() {
-    char *arglist[MAXARGS + 1];  /* an array of ptrs */
-    int numargs;                 /* index into array */
-    char argbuf[ARGLEN];         /* read stuff here */
-    char *makestring();          /* malloc etc */
+    pid_t cpid = fork();
 
-    numargs = 0;
-
-    while (numargs < MAXARGS) {
-        printf("Arg[%d]? ", numargs);
-
-        if (fgets(argbuf, ARGLEN, stdin) && *argbuf != '\n') {
-            arglist[numargs++] = makestring(argbuf);
-        } else {
-            if (numargs > 0) {
-                arglist[numargs] = NULL;   /* close list */
-                execute(arglist);          /* do the task */
-                numargs = 0;               /* and reset */
-            }
-        }
+    if (cpid < 0) {
+    
+        printf("Fork Failed\n");
+        return 1;
+    } 
+    else if (cpid == 0) {
+        
+        execlp("/bin/ls", "ls", "-lt", NULL);
+       
+        printf("execlp failed\n");
+        exit(1);
+    } 
+    else {
+    
+        waitpid(cpid, NULL, 0);
+        printf("Child process is done\n");
     }
+
     return 0;
 }
-
-/* NOTE: use execvp to do it */
-int execute(char *arglist[]) {
-    if (arglist == -1){
-	printf("Process did not terminate correctly");
-}
-    exit(1);
-}
-
-/* trim off newline and create storage for the string */
-char *makestring(char *buf) {
-    char *cp;
-
-    buf[strlen(buf) - 1] = '\0';   /* trim newline */
-    cp = malloc(sizeof(char) * (strlen(buf) + 1));
-    if (cp == NULL) {
-        fprintf(stderr, "no memory\n");
-        exit(1);
-    }
-    strcpy(cp, buf);   /* copy chars */
-    return cp;
-}
-

@@ -35,10 +35,28 @@ int main() {
 
 /* NOTE: use execvp to do it */
 int execute(char *arglist[]) {
-    execvp(arglist[0], arglist);  /* do it */
-    perror("execvp failed");
-    exit(1);
+    pid_t pid = fork();
+
+    if (pid < 0) {
+       
+        perror("Fork failed");
+        return 1;
+    }
+    else if (pid == 0) {
+        // Child process executes command
+        if (execvp(arglist[0], arglist) < 0) {
+            perror("execvp failed");
+            exit(1);
+        }
+    }
+    else {
+        
+        waitpid(pid, NULL, 0);
+    }
+
+    return 0;
 }
+
 
 /* trim off newline and create storage for the string */
 char *makestring(char *buf) {

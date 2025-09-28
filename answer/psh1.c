@@ -35,11 +35,28 @@ int main() {
 
 /* NOTE: use execvp to do it */
 int execute(char *arglist[]) {
-    if (arglist == -1){
-	printf("Process did not terminate correctly");
+    pid_t pid = fork();
+
+    if (pid < 0) {
+        
+        printf("Fork failed\n");
+        return 1;
+    }
+    else if (pid == 0) {
+        
+        if (execvp(arglist[0], arglist) < 0) {
+            printf("Process did not terminate correctly\n");
+            exit(1);
+        }
+    }
+    else {
+        
+        waitpid(pid, NULL, 0);
+    }
+
+    return 0;
 }
-    exit(1);
-}
+
 
 /* trim off newline and create storage for the string */
 char *makestring(char *buf) {
