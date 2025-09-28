@@ -4,7 +4,7 @@
 #include <sys/wait.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <iostream>
+#include <stdio.h>
 
 int main() {
 
