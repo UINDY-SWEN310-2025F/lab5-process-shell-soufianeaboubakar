@@ -5,18 +5,18 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-#define MAXARGS 20   
-#define ARGLEN  100  
+#define MAXARGS 20   /* cmdline args */
+#define ARGLEN  100  /* token length */
 
 int execute(char *arglist[]);
 char *makestring(char *buf);
 
 int main(int argc, char *argv[]) {
-    char *arglist[MAXARGS + 1]; 
-    int numargs;                 
-    char argbuf[ARGLEN];      
+    char *arglist[MAXARGS + 1];  /* array of pointers to args */
+    int numargs;                 /* index into array */
+    char argbuf[ARGLEN];         /* buffer for reading input */
 
-
+    /* --- Non-interactive test mode --- */
     if (argc > 1 && strcmp(argv[1], "--test") == 0) {
         char *test_args[] = {"ls", "-l", NULL};
         execute(test_args);
@@ -33,16 +33,16 @@ int main(int argc, char *argv[]) {
             arglist[numargs++] = makestring(argbuf);
         } else {
             if (numargs > 0) {
-                arglist[numargs] = NULL;   
-                execute(arglist);         
-                numargs = 0;               
+                arglist[numargs] = NULL;   /* close list */
+                execute(arglist);          /* run command */
+                numargs = 0;               /* reset for next command */
             }
         }
     }
     return 0;
 }
 
-
+/* --- Create new process and execute command --- */
 int execute(char *arglist[]) {
     pid_t pid = fork();
 
@@ -62,9 +62,9 @@ int execute(char *arglist[]) {
     return 0;
 }
 
-
+/* --- Trim newline and allocate memory for string --- */
 char *makestring(char *buf) {
-    buf[strcspn(buf, "\n")] = '\0';   
+    buf[strcspn(buf, "\n")] = '\0';   /* trim newline safely */
     char *cp = malloc(strlen(buf) + 1);
     if (cp == NULL) {
         fprintf(stderr, "no memory\n");
@@ -73,3 +73,4 @@ char *makestring(char *buf) {
     strcpy(cp, buf);
     return cp;
 }
+

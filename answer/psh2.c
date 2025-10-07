@@ -3,72 +3,67 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/wait.h>   
 
-#define MAXARGS 20   /* cmdline args */
-#define ARGLEN  100  /* token length */
+#define MAXARGS 20   
+#define ARGLEN  100  
 
 int execute(char *arglist[]);
+char *makestring(char *buf);
 
-int main() {
-    char *arglist[MAXARGS + 1];  /* an array of ptrs */
-    int numargs;                 /* index into array */
-    char argbuf[ARGLEN];         /* read stuff here */
-    char *makestring();          /* malloc etc */
-
-    numargs = 0;
+int main(void) {
+    char *arglist[MAXARGS + 1];  
+    int numargs = 0;            
+    char argbuf[ARGLEN];         
 
     while (numargs < MAXARGS) {
         printf("Arg[%d]? ", numargs);
+        fflush(stdout);
 
         if (fgets(argbuf, ARGLEN, stdin) && *argbuf != '\n') {
             arglist[numargs++] = makestring(argbuf);
         } else {
             if (numargs > 0) {
-                arglist[numargs] = NULL;   /* close list */
-                execute(arglist);          /* do the task */
-                numargs = 0;               /* and reset */
+                arglist[numargs] = NULL;   
+                execute(arglist);          
+                numargs = 0;               
             }
         }
     }
     return 0;
 }
 
-/* NOTE: use execvp to do it */
 int execute(char *arglist[]) {
     pid_t pid = fork();
 
     if (pid < 0) {
-       
-        perror("Fork failed");
+        perror("fork failed");
         return 1;
-    }
+    } 
     else if (pid == 0) {
-        // Child process executes command
-        if (execvp(arglist[0], arglist) < 0) {
+        // Child process
+        if (execvp(arglist[0], arglist) == -1) {
             perror("execvp failed");
             exit(1);
         }
-    }
+    } 
     else {
-        
+        // Parent process waits
         waitpid(pid, NULL, 0);
     }
 
     return 0;
 }
 
-
-/* trim off newline and create storage for the string */
 char *makestring(char *buf) {
-    char *cp;
+    
+    buf[strcspn(buf, "\n")] = '\0';  
 
-    buf[strlen(buf) - 1] = '\0';   /* trim newline */
-    cp = malloc(sizeof(char) * (strlen(buf) + 1));
+    char *cp = malloc(strlen(buf) + 1);
     if (cp == NULL) {
         fprintf(stderr, "no memory\n");
         exit(1);
     }
-    strcpy(cp, buf);   /* copy chars */
+    strcpy(cp, buf);
     return cp;
 }
-

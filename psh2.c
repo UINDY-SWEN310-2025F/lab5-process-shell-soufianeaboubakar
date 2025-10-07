@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <sys/wait.h>
+#include <sys/wait.h>   
 
 #define MAXARGS 20   
 #define ARGLEN  100  
@@ -11,19 +11,10 @@
 int execute(char *arglist[]);
 char *makestring(char *buf);
 
-int main(int argc, char *argv[]) {
-    char *arglist[MAXARGS + 1]; 
-    int numargs;                 
-    char argbuf[ARGLEN];      
-
-
-    if (argc > 1 && strcmp(argv[1], "--test") == 0) {
-        char *test_args[] = {"ls", "-l", NULL};
-        execute(test_args);
-        exit(0);
-    }
-
-    numargs = 0;
+int main(void) {
+    char *arglist[MAXARGS + 1];  
+    int numargs = 0;            
+    char argbuf[ARGLEN];         
 
     while (numargs < MAXARGS) {
         printf("Arg[%d]? ", numargs);
@@ -34,7 +25,7 @@ int main(int argc, char *argv[]) {
         } else {
             if (numargs > 0) {
                 arglist[numargs] = NULL;   
-                execute(arglist);         
+                execute(arglist);          
                 numargs = 0;               
             }
         }
@@ -42,29 +33,32 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-
 int execute(char *arglist[]) {
     pid_t pid = fork();
 
     if (pid < 0) {
         perror("fork failed");
         return 1;
-    }
+    } 
     else if (pid == 0) {
-        execvp(arglist[0], arglist);
-        perror("exec failed");
-        exit(1);
-    }
+        // Child process
+        if (execvp(arglist[0], arglist) == -1) {
+            perror("execvp failed");
+            exit(1);
+        }
+    } 
     else {
+        // Parent process waits
         waitpid(pid, NULL, 0);
     }
 
     return 0;
 }
 
-
 char *makestring(char *buf) {
-    buf[strcspn(buf, "\n")] = '\0';   
+    
+    buf[strcspn(buf, "\n")] = '\0';  
+
     char *cp = malloc(strlen(buf) + 1);
     if (cp == NULL) {
         fprintf(stderr, "no memory\n");
@@ -73,3 +67,4 @@ char *makestring(char *buf) {
     strcpy(cp, buf);
     return cp;
 }
+
