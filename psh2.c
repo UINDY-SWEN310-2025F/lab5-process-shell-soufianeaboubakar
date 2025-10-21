@@ -1,70 +1,28 @@
-#include <stdio.h>
-#include <signal.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/wait.h>   
 
-#define MAXARGS 20   
-#define ARGLEN  100  
+void execute(char *arglist[])
+/*
+ * use fork and execvp and wait to do it
+ */
+{
+    int pid, exitstatus;  /* of child */
 
-int execute(char *arglist[]);
-char *makestring(char *buf);
+    pid = fork();  /* make new process */
 
-int main(void) {
-    char *arglist[MAXARGS + 1];  
-    int numargs = 0;            
-    char argbuf[ARGLEN];         
+    switch (pid) {
+        case -1:
+            perror("fork failed");
+            exit(1);
 
-    while (numargs < MAXARGS) {
-        printf("Arg[%d]? ", numargs);
-        fflush(stdout);
-
-        if (fgets(argbuf, ARGLEN, stdin) && *argbuf != '\n') {
-            arglist[numargs++] = makestring(argbuf);
-        } else {
-            if (numargs > 0) {
-                arglist[numargs] = NULL;   
-                execute(arglist);          
-                numargs = 0;               
-            }
-        }
-    }
-    return 0;
-}
-
-int execute(char *arglist[]) {
-    pid_t pid = fork();
-
-    if (pid < 0) {
-        perror("fork failed");
-        return 1;
-    } 
-    else if (pid == 0) {
-        // Child process
-        if (execvp(arglist[0], arglist) == -1) {
+        case 0:
+            /* do it */
+            execvp(arglist[0], arglist);
             perror("execvp failed");
             exit(1);
-        }
-    } 
-    else {
-        // Parent process waits
-        waitpid(pid, NULL, 0);
+
+        default:
+            /* Parent waits here */
+            wait(&exitstatus);
+            printf("child exited with status %d,%d\n",
+                   exitstatus >> 8, exitstatus & 0377);
     }
-
-    return 0;
 }
-
-char *makestring(char *buf) {
-    
-    buf[strcspn(buf, "\n")] = '\0';  
-
-    char *cp = malloc(strlen(buf) + 1);
-    if (cp == NULL) {
-        fprintf(stderr, "no memory\n");
-        exit(1);
-    }
-    strcpy(cp, buf);
-    return cp;
-}
-
